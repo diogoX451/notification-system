@@ -1,26 +1,29 @@
-version: '3'
+version: '3.1'
+networks:
+  notification-api:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.168.0.0/16
+          gateway: 172.168.0.1
+
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+  db:
+    container_name: notification-db
+    image: postgres:15.3
+    restart: always
     ports:
-      - "2181:2181"
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=toor
+      - POSTGRES_DB=notification
+    networks:
+      - notification-api
 
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+volumes:
+  postgres-data:
 
-      
+
